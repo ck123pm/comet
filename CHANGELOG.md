@@ -1,6 +1,6 @@
 # Changelog
 
-All notable changes to @rpamis/comet will be documented in this file.
+All notable changes to @ck123pm/comet will be documented in this file.
 
 ## What's Changed [0.3.3] - 2026-05-27
 

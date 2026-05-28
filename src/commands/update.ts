@@ -12,7 +12,7 @@ import type { InstallScope } from '../core/types.js';
 
 const require = createRequire(import.meta.url);
 const { version } = require('../../package.json');
-const PACKAGE_NAME = '@rpamis/comet';
+const PACKAGE_NAME = '@ck123pm/comet';
 
 interface UpdateOptions {
   json?: boolean;

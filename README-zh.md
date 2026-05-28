@@ -10,13 +10,13 @@
 <p align="center">
   <a href="https://github.com/rpamis/comet/actions/workflows/ci.yml"><img alt="CI" src="https://img.shields.io/github/actions/workflow/status/rpamis/comet/ci.yml?branch=master&style=flat-square&label=CI" /></a>
   <a href="https://deepwiki.com/rpamis/comet"><img alt="DeepWiki" src="https://img.shields.io/badge/DeepWiki-rpamis%2Fcomet-blue?style=flat-square" /></a>
-  <a href="https://www.npmjs.com/package/@rpamis/comet"><img alt="npm version" src="https://img.shields.io/npm/v/@rpamis/comet?style=flat-square" /></a>
-  <a href="https://www.npmjs.com/package/@rpamis/comet"><img alt="npm download count" src="https://img.shields.io/npm/dm/@rpamis/comet?style=flat-square&label=Downloads/mo" /></a>
-  <a href="https://www.npmjs.com/package/@rpamis/comet"><img alt="npm weekly download count" src="https://img.shields.io/npm/dw/@rpamis/comet?style=flat-square&label=Downloads/wk" /></a>
+  <a href="https://www.npmjs.com/package/@ck123pm/comet"><img alt="npm version" src="https://img.shields.io/npm/v/@ck123pm/comet?style=flat-square" /></a>
+  <a href="https://www.npmjs.com/package/@ck123pm/comet"><img alt="npm download count" src="https://img.shields.io/npm/dm/@ck123pm/comet?style=flat-square&label=Downloads/mo" /></a>
+  <a href="https://www.npmjs.com/package/@ck123pm/comet"><img alt="npm weekly download count" src="https://img.shields.io/npm/dw/@ck123pm/comet?style=flat-square&label=Downloads/wk" /></a>
   <a href="./LICENSE"><img alt="License: MIT" src="https://img.shields.io/badge/License-MIT-blue.svg?style=flat-square" /></a>
 </p>
 
-# @rpamis/comet
+# @ck123pm/comet
 
 ```
  ██████╗ ██████╗ ███╗   ███╗███████╗████████╗
@@ -73,7 +73,7 @@ Superpowers 在头脑风暴后会产出 Spec 文档，但这个文档通常没�
 ## 安装
 
 ```bash
-npm install -g @rpamis/comet
+npm install -g @ck123pm/comet
 ```
 
 ## 快速开始
@@ -96,7 +96,7 @@ comet init
 > [!TIP]
 > 更新版本号
 >
-> 执行 `comet update` 或者 `npm install -g @rpamis/comet@latest` 即可更新到最新版本。
+> 执行 `comet update` 或者 `npm install -g @ck123pm/comet@latest` 即可更新到最新版本。
 
 ## 对OpenClaw和Hermes、或其他AI平台的支持
 
