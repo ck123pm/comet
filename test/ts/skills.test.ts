@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, afterEach } from 'vitest';
+﻿import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { promises as fs } from 'fs';
 import path from 'path';
 import os from 'os';
@@ -209,6 +209,10 @@ describe('skills', () => {
         path.resolve('assets', 'skills-zh', 'comet-archive', 'SKILL.md'),
         'utf-8',
       );
+      const zhOpen = await fs.readFile(
+        path.resolve('assets', 'skills-zh', 'comet-open', 'SKILL.md'),
+        'utf-8',
+      );
       expect(zhComet).toContain('.harness');
       expect(zhComet).toContain('README.md');
       expect(zhComet).toContain('按需注入');
@@ -218,6 +222,10 @@ describe('skills', () => {
       expect(zhHotfix).toContain('按需注入');
       expect(zhArchive).toContain('.harness');
       expect(zhArchive).toContain('update/spec review');
+      expect(zhOpen).toContain('.harness');
+      expect(zhOpen).toContain('README.md');
+      expect(zhOpen).toContain('按需注入');
+      expect(zhOpen).toContain('不能跳过 `.harness` 检查');
 
       expect(zhComet).toContain('决策点是阻塞点');
       expect(zhDesign).toContain('必须暂停并等待用户明确确认设计方案');
@@ -324,6 +332,10 @@ describe('skills', () => {
         path.resolve('assets', 'skills', 'comet-archive', 'SKILL.md'),
         'utf-8',
       );
+      const enOpen = await fs.readFile(
+        path.resolve('assets', 'skills', 'comet-open', 'SKILL.md'),
+        'utf-8',
+      );
 
       expect(enComet).toContain('Decision points are blocking points');
       expect(enComet).toContain('If the project has a `.harness/` directory, load harness context before phase routing');
@@ -331,6 +343,10 @@ describe('skills', () => {
       expect(enComet).toContain('Use `.harness/README.md` to decide which project context files are relevant');
       expect(enComet).toContain('Read `.harness/index/routing.md` and `.harness/index/priority.md` as routing and priority aids');
       expect(enComet).toContain('Inject the relevant `.harness` files on demand');
+      expect(enOpen).toContain('If the project has a `.harness/` directory, load harness context before exploring ideas or creating the change');
+      expect(enOpen).toContain('Read `.harness/README.md` first');
+      expect(enOpen).toContain('Inject the relevant `.harness` files on demand');
+      expect(enOpen).toContain('Do not skip the `.harness` check on the new-change path');
       expect(enComet).not.toContain('inject every `MUST` file before continuing');
       expect(enComet).not.toContain('`.harness/memory/pitfalls.md` and `.harness/memory/regressions.md`');
       expect(enDesign).toContain('must pause and wait for the user to explicitly confirm');
@@ -429,3 +445,4 @@ async function fileExists(filePath: string): Promise<boolean> {
     return false;
   }
 }
+

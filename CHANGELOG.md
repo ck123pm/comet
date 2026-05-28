@@ -2,6 +2,17 @@
 
 All notable changes to @ck123pm/comet will be documented in this file.
 
+## What's Changed [0.3.4] - 2026-05-28
+
+### Changed
+
+- **Open phase harness loading**: Updated `comet-open` so the no-active-change path also checks `.harness/README.md` first, then uses `index/routing.md` and `index/priority.md` to inject relevant context on demand before opening a new change.
+- **Chinese open skill wording**: Rewrote the Chinese `comet-open` skill content so the `.harness` guidance, open-phase steps, and generated slash-command content stay aligned with the English workflow.
+
+### Tests
+
+- **Open entry harness coverage**: Extended skill regression coverage so both English and Chinese `comet-open` paths assert `.harness` loading behavior, preventing the new-change entry path from bypassing harness context.
+
 ## What's Changed [0.3.3] - 2026-05-27
 
 ### Changed

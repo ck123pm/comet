@@ -9,6 +9,17 @@ description: "Comet Phase 1: Open. Invoke with /comet-open. Explore ideas throug
 
 - No active change, or user wants to create a new change
 
+## Harness Context
+
+If the project has a `.harness/` directory, load harness context before exploring ideas or creating the change:
+
+- Read `.harness/README.md` first to understand the project knowledge system
+- Use `.harness/README.md` to decide which project context files are relevant for the current request
+- Read `.harness/index/routing.md` and `.harness/index/priority.md` as routing and priority aids
+- Inject the relevant `.harness` files on demand; do not narrow the context to only files marked `MUST`
+
+This applies even when `/comet` routed here because there was no active change. Do not skip the `.harness` check on the new-change path.
+
 ## Steps
 
 ### 1. Explore Ideas
