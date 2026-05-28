@@ -136,6 +136,9 @@ design_doc=$(field_value "design_doc")
 plan=$(field_value "plan")
 handoff_context=$(field_value "handoff_context")
 handoff_hash=$(field_value "handoff_hash")
+harness_context=$(field_value "harness_context")
+harness_hash=$(field_value "harness_hash")
+harness_phase=$(field_value "harness_phase")
 
 validate_enum "workflow"      "$workflow"      "full hotfix tweak"
 validate_enum "phase"         "$phase"          "open design build verify archive"
@@ -146,6 +149,7 @@ validate_enum "verify_result" "$verify_result"  "pending pass fail"
 validate_enum "branch_status" "$branch_status"  "pending handled"
 validate_enum "archived"      "$archived"       "true false"
 validate_enum "direct_override" "$direct_override" "true false"
+validate_enum "harness_phase" "$harness_phase" "open design build verify archive"
 
 # --- Path validation ---
 
@@ -173,8 +177,20 @@ if [ -n "$handoff_hash" ] && [ "$handoff_hash" != "null" ]; then
   fi
 fi
 
+if [ -n "$harness_context" ] && [ "$harness_context" != "null" ]; then
+  if [ ! -f "$harness_context" ]; then
+    fail "harness_context='$harness_context' does not exist on disk"
+  fi
+fi
+
+if [ -n "$harness_hash" ] && [ "$harness_hash" != "null" ]; then
+  if [[ ! "$harness_hash" =~ ^[a-f0-9]{64}$ ]]; then
+    fail "harness_hash='$harness_hash' is not a sha256 hex digest"
+  fi
+fi
+
 # --- Unknown keys check ---
-KNOWN_KEYS="workflow phase design_doc plan build_mode isolation verify_mode verify_result verification_report branch_status verified_at created_at archived direct_override build_command verify_command handoff_context handoff_hash base_ref"
+KNOWN_KEYS="workflow phase design_doc plan build_mode isolation verify_mode verify_result verification_report branch_status verified_at created_at archived direct_override build_command verify_command handoff_context handoff_hash harness_context harness_hash harness_phase base_ref"
 while IFS=: read -r key _; do
   key="${key// /}"
   [ -z "$key" ] && continue

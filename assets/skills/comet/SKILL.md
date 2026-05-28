@@ -55,10 +55,11 @@ If the project has a `.harness/` directory, load harness context before phase ro
 - Use `.harness/README.md` to decide which project context files are relevant for the current change and phase
 - Read `.harness/index/routing.md` and `.harness/index/priority.md` as routing and priority aids
 - Inject the relevant `.harness` files on demand; do not narrow the context to only files marked `MUST`
+- When an active change already exists, materialize the phase-scoped harness pack with `bash "$COMET_HARNESS" <change-name> <phase> --write` before invoking downstream skills or editing files
 
 **Resume rules**:
 - On every context resume, rerun Step 0 and Step 1; do not trust conversation history for phase detection
-- On every phase entry, if `.harness/` exists, rerun the harness loading sequence above before making phase decisions or editing files
+- On every phase entry, if `.harness/` exists, rerun the harness loading sequence above and regenerate the current phase harness pack before making phase decisions or editing files
 - If there is an active change and the worktree has uncommitted changes, handle them through `comet/reference/dirty-worktree.md`. That protocol defines checks, attribution, and prohibitions; this file does not repeat them
 - If `phase: build`, first check whether `build_mode` and `isolation` are set; if any fields are unset, return to `/comet-build` corresponding step to supplement before executing; if both are set, read the next unchecked task from tasks.md and continue
 - If `phase: verify` and `verify_result: fail`, enter the verification failure decision blocking point: pause and ask the user to fix or accept deviation; only after the user chooses fix, run `bash "$COMET_STATE" transition <name> verify-fail` and invoke `/comet-build`

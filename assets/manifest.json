@@ -7,6 +7,7 @@
     "comet/scripts/comet-guard.sh",
     "comet/scripts/comet-state.sh",
     "comet/scripts/comet-handoff.sh",
+    "comet/scripts/comet-harness.sh",
     "comet/scripts/comet-archive.sh",
     "comet/scripts/comet-yaml-validate.sh",
     "comet-open/SKILL.md",

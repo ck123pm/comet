@@ -28,11 +28,24 @@ bash "$COMET_STATE" check <name> build
 
 Proceed to Step 1 after verification passes. The script outputs specific failure reasons when verification fails.
 
+### 0b. Generate Build Harness Context
+
+If `.harness/` exists, immediately generate the current phase harness pack before planning or implementation:
+
+```bash
+bash "$COMET_HARNESS" <name> build --write
+```
+
+This writes:
+- `openspec/changes/<name>/.comet/handoff/build-harness-context.md`
+- `openspec/changes/<name>/.comet/handoff/build-harness-context.json`
+
 ### 1. Create Plan
 
 **Immediately execute:** Use the Skill tool to load the `superpowers:writing-plans` skill. Skipping this step is prohibited.
 
 After the skill loads, follow its guidance to create a plan. Plan requirements:
+- Read `openspec/changes/<name>/.comet/handoff/build-harness-context.md` first when it exists, and carry the applicable harness constraints into the plan
 - Save to `docs/superpowers/plans/YYYY-MM-DD-<feature>.md`
 - Reference design document, break down into executable tasks
 - **Plan file header must contain associated metadata**:
@@ -116,6 +129,8 @@ Without `direct_override: true`, `build_mode=direct` in full workflow is blocked
 After creating isolation, confirm plan file is accessible (naturally accessible with branch method; for worktree method, confirm plan has been committed).
 
 **Load execution skill**: Use the Skill tool to load the corresponding skill. Skipping this step is prohibited.
+
+Before executing the plan, load `openspec/changes/<name>/.comet/handoff/build-harness-context.md` and apply its constraints during implementation.
 
 If the selected Superpowers skill is unavailable, stop the process and prompt to install or enable the corresponding skill. Do not substitute this step with normal conversation.
 

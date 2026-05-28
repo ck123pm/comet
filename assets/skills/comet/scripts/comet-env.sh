@@ -14,6 +14,7 @@ _comet_env_sourced=0
 export COMET_GUARD="${COMET_GUARD:-${_comet_script_dir}/comet-guard.sh}"
 export COMET_STATE="${COMET_STATE:-${_comet_script_dir}/comet-state.sh}"
 export COMET_HANDOFF="${COMET_HANDOFF:-${_comet_script_dir}/comet-handoff.sh}"
+export COMET_HARNESS="${COMET_HARNESS:-${_comet_script_dir}/comet-harness.sh}"
 export COMET_ARCHIVE="${COMET_ARCHIVE:-${_comet_script_dir}/comet-archive.sh}"
 export COMET_YAML_VALIDATE="${COMET_YAML_VALIDATE:-${_comet_script_dir}/comet-yaml-validate.sh}"
 
@@ -38,6 +39,7 @@ for _comet_script in \
   "$COMET_GUARD" \
   "$COMET_STATE" \
   "$COMET_HANDOFF" \
+  "$COMET_HARNESS" \
   "$COMET_ARCHIVE" \
   "$COMET_YAML_VALIDATE"; do
   if [ ! -f "$_comet_script" ]; then

@@ -60,6 +60,7 @@ describe('comet shell scripts', () => {
       'comet-archive.sh',
       'comet-guard.sh',
       'comet-handoff.sh',
+      'comet-harness.sh',
       'comet-state.sh',
       'comet-yaml-validate.sh',
     ]) {
@@ -96,7 +97,7 @@ describe('comet shell scripts', () => {
       [
         '#!/bin/bash',
         `. "${toBashPath(envScript)}"`,
-        'printf "%s\\n%s\\n%s\\n%s\\n" "$COMET_STATE" "$COMET_GUARD" "$COMET_HANDOFF" "$COMET_ARCHIVE"',
+        'printf "%s\\n%s\\n%s\\n%s\\n%s\\n" "$COMET_STATE" "$COMET_GUARD" "$COMET_HANDOFF" "$COMET_HARNESS" "$COMET_ARCHIVE"',
         '',
       ].join('\n'),
     );
@@ -107,6 +108,7 @@ describe('comet shell scripts', () => {
     expect(result.stdout).toContain('comet-state.sh');
     expect(result.stdout).toContain('comet-guard.sh');
     expect(result.stdout).toContain('comet-handoff.sh');
+    expect(result.stdout).toContain('comet-harness.sh');
     expect(result.stdout).toContain('comet-archive.sh');
   }, 20_000);
 
@@ -274,6 +276,45 @@ describe('comet shell scripts', () => {
     expect(result.stderr).toContain('[PASS] design handoff markdown is traceable');
     expect(result.stderr).toContain('[PASS] Design Doc frontmatter links current change');
     expect(result.stderr).toContain('[PASS] Design Doc declares OpenSpec as canonical spec');
+  }, 40_000);
+
+  it('generates a phase-scoped harness context pack and records it in state', async () => {
+    const harnessScript = path.join(tmpDir, 'scripts', 'comet-harness.sh');
+    await createChange(
+      tmpDir,
+      'harness-pack',
+      [
+        'workflow: full',
+        'phase: build',
+        'build_mode: executing-plans',
+        'isolation: branch',
+        'verify_mode: null',
+        'design_doc: docs/superpowers/specs/harness-pack-design.md',
+        'plan: docs/superpowers/plans/harness-pack-plan.md',
+        'verify_result: pending',
+        'verified_at: null',
+        'archived: false',
+        '',
+      ].join('\n'),
+    );
+    await writeFile(path.join(tmpDir, '.harness', 'README.md'), '# Harness\nSee guides/build.md\n');
+    await writeFile(path.join(tmpDir, '.harness', 'index', 'routing.md'), 'build -> guides/build.md\n');
+    await writeFile(path.join(tmpDir, '.harness', 'index', 'priority.md'), 'MUST: guides/build.md\n');
+    await writeFile(path.join(tmpDir, '.harness', 'guides', 'build.md'), 'Build guardrails\n');
+
+    const result = runBash(tmpDir, harnessScript, ['harness-pack', 'build', '--write']);
+    const contextPath = runBash(tmpDir, stateScript, ['get', 'harness-pack', 'harness_context']).stdout.trim();
+    const contextHash = runBash(tmpDir, stateScript, ['get', 'harness-pack', 'harness_hash']).stdout.trim();
+    const contextPhase = runBash(tmpDir, stateScript, ['get', 'harness-pack', 'harness_phase']).stdout.trim();
+
+    expect(result.status).toBe(0);
+    expect(contextPath).toBe('openspec/changes/harness-pack/.comet/handoff/build-harness-context.json');
+    expect(contextHash).toMatch(/^[a-f0-9]{64}$/);
+    expect(contextPhase).toBe('build');
+    const markdown = await fs.readFile(path.join(tmpDir, contextPath.replace(/\.json$/, '.md')), 'utf-8');
+    expect(markdown).toContain('Generated-by: comet-harness.sh');
+    expect(markdown).toContain('Source: .harness/README.md');
+    expect(markdown).toContain('Source: .harness/guides/build.md');
   }, 20_000);
 
   it('reads comet yaml fields without including trailing comments', async () => {
@@ -741,6 +782,7 @@ describe('comet shell scripts', () => {
       'comet-archive.sh',
       'comet-guard.sh',
       'comet-handoff.sh',
+      'comet-harness.sh',
       'comet-yaml-validate.sh',
     ]) {
       const content = await fs.readFile(path.join(tmpDir, 'scripts', name), 'utf-8');
@@ -867,7 +909,7 @@ describe('comet shell scripts', () => {
 
     expect(result.status).toBe(0);
     expect(result.stderr).toContain('ALL CHECKS PASSED');
-  });
+  }, 20_000);
 
   it('reports accurate archive step counts when syncing and annotating', async () => {
     const archiveScript = path.join(tmpDir, 'scripts', 'comet-archive.sh');
@@ -914,6 +956,97 @@ describe('comet shell scripts', () => {
     expect(result.status).toBe(0);
     expect(result.stderr).toContain('Archive complete. 7/7 steps succeeded.');
   }, 20_000);
+
+  it('blocks build guard when .harness exists but build harness context has not been generated', async () => {
+    await createChange(
+      tmpDir,
+      'missing-build-harness',
+      [
+        'workflow: full',
+        'phase: build',
+        'build_mode: executing-plans',
+        'isolation: branch',
+        'verify_mode: null',
+        'design_doc: docs/superpowers/specs/missing-build-harness.md',
+        'plan: docs/superpowers/plans/missing-build-harness.md',
+        'verify_result: pending',
+        'verified_at: null',
+        'archived: false',
+        '',
+      ].join('\n'),
+    );
+    await writeFile(path.join(tmpDir, '.harness', 'README.md'), '# Harness\n');
+    await writeFile(
+      path.join(tmpDir, 'docs', 'superpowers', 'specs', 'missing-build-harness.md'),
+      'design\n',
+    );
+    await writeFile(
+      path.join(tmpDir, 'docs', 'superpowers', 'plans', 'missing-build-harness.md'),
+      'plan\n',
+    );
+    await writeFile(
+      path.join(tmpDir, 'package.json'),
+      JSON.stringify({ scripts: { build: 'node -e "process.exit(0)"' } }),
+    );
+
+    const result = runBash(tmpDir, guardScript, ['missing-build-harness', 'build']);
+
+    expect(result.status).not.toBe(0);
+    expect(result.stderr).toContain('[FAIL] build harness context is current');
+    expect(result.stderr).toContain('harness_context is missing from .comet.yaml');
+  }, 40_000);
+
+  it('blocks verify guard when harness files changed after verify context generation', async () => {
+    const harnessScript = path.join(tmpDir, 'scripts', 'comet-harness.sh');
+    await createChange(
+      tmpDir,
+      'stale-verify-harness',
+      [
+        'workflow: full',
+        'phase: verify',
+        'build_mode: executing-plans',
+        'isolation: branch',
+        'verify_mode: full',
+        'design_doc: docs/superpowers/specs/stale-verify-harness.md',
+        'plan: docs/superpowers/plans/stale-verify-harness.md',
+        'verify_result: pass',
+        'verification_report: docs/superpowers/reports/stale-verify-harness.md',
+        'branch_status: handled',
+        'verified_at: null',
+        'archived: false',
+        '',
+      ].join('\n'),
+    );
+    await writeFile(path.join(tmpDir, '.harness', 'README.md'), '# Harness\n');
+    await writeFile(path.join(tmpDir, '.harness', 'rules', 'verify.md'), 'Verify rule v1\n');
+    await writeFile(
+      path.join(tmpDir, 'docs', 'superpowers', 'specs', 'stale-verify-harness.md'),
+      'design\n',
+    );
+    await writeFile(
+      path.join(tmpDir, 'docs', 'superpowers', 'plans', 'stale-verify-harness.md'),
+      'plan\n',
+    );
+    await writeFile(
+      path.join(tmpDir, 'docs', 'superpowers', 'reports', 'stale-verify-harness.md'),
+      'PASS\n',
+    );
+    await writeFile(
+      path.join(tmpDir, 'package.json'),
+      JSON.stringify({ scripts: { build: 'node -e "process.exit(0)"' } }),
+    );
+
+    expect(runBash(tmpDir, harnessScript, ['stale-verify-harness', 'verify', '--write']).status).toBe(
+      0,
+    );
+    await writeFile(path.join(tmpDir, '.harness', 'rules', 'verify.md'), 'Verify rule v2\n');
+
+    const result = runBash(tmpDir, guardScript, ['stale-verify-harness', 'verify']);
+
+    expect(result.status).not.toBe(0);
+    expect(result.stderr).toContain('[FAIL] verify harness context is current');
+    expect(result.stderr).toContain('Harness files changed after harness context was generated.');
+  }, 40_000);
 
   it('emits a non-blocking .harness review reminder during archive', async () => {
     const archiveScript = path.join(tmpDir, 'scripts', 'comet-archive.sh');

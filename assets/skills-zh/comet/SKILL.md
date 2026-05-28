@@ -1,4 +1,4 @@
----
+﻿---
 name: comet
 description: "Comet — OpenSpec + Superpowers 双星开发流程。用 /comet 启动，自动检测阶段并分发到子命令。五阶段：开启 → 深度设计 → 计划与构建 → 验证与收尾 → 归档。"
 ---
@@ -56,8 +56,9 @@ agent 做决策只需读本节，参考附录按需查阅。
 - 核心规则是**按需注入**相关 `.harness` 文件，不是只注入 `MUST` 文件
 
 **断点恢复规则**：
+- 如当前已有 active change，在路由到下游 skill 或开始修改文件前，必须通过 `bash "$COMET_HARNESS" <change-name> <phase> --write` 生成当前阶段的 phase-scoped harness context pack
 - 每次恢复上下文时，先重新执行 Step 0 和 Step 1，不依赖对话历史判断阶段
-- 每次进入 Comet 阶段前，只要存在 `.harness/`，都要先重新执行上面的 `.harness` 上下文判定流程
+- 每次进入 Comet 阶段前，只要存在 `.harness/`，都要先重新执行上面的 `.harness` 上下文判定流程，并重新生成当前阶段的 harness context pack，再做阶段判定或编码/验证
 - 只要存在 active change 且工作区有未提交改动，必须按 `comet/reference/dirty-worktree.md` 协议处理。该协议定义了检查步骤、归因分类和禁令，本文件不重复
 - 若 `phase: build`，先检查 `build_mode` 和 `isolation` 是否已设置；若有未设置的字段，回到 `/comet-build` 对应步骤补充后再执行；若均已设置，读取 tasks.md 的下一个未勾选任务继续
 - 若 `phase: verify` 且 `verify_result: fail`，进入验证失败决策阻塞点：暂停并询问用户修复或接受偏差；用户选择修复后才运行 `bash "$COMET_STATE" transition <name> verify-fail` 并调用 `/comet-build`
@@ -220,7 +221,7 @@ fi
 . "$COMET_ENV"
 
 # 脚本定位失败时停止流程
-if [ -z "$COMET_GUARD" ] || [ -z "$COMET_STATE" ] || [ -z "$COMET_HANDOFF" ] || [ -z "$COMET_ARCHIVE" ]; then
+if [ -z "$COMET_GUARD" ] || [ -z "$COMET_STATE" ] || [ -z "$COMET_HANDOFF" ] || [ -z "$COMET_ARCHIVE" ] || [ -z "$COMET_HARNESS" ]; then
   echo "ERROR: Comet scripts not found. Ensure the comet skill is installed." >&2
   echo "Expected path pattern: */comet/scripts/comet-*.sh under project or platform skill directories" >&2
   return 1
@@ -250,7 +251,7 @@ bash "$COMET_STATE" transition <archive-name> archived
 bash "$COMET_ARCHIVE" <change-name>
 ```
 
-加载 comet 后，agent 应执行以上变量赋值一次，后续全程复用 `$COMET_GUARD`、`$COMET_STATE`、`$COMET_HANDOFF`、`$COMET_ARCHIVE`。
+加载 comet 后，agent 应执行以上变量赋值一次，后续全程复用 `$COMET_GUARD`、`$COMET_STATE`、`$COMET_HANDOFF`、`$COMET_ARCHIVE`、`$COMET_HARNESS`。
 
 ### 文件结构
 
@@ -287,3 +288,7 @@ docs/superpowers/                      # Superpowers — HOW
 9. **归档闭环** — design doc 和 plan 必须标注 `archived-with` 状态
 10. **修改已有功能** — 直接 open 新 change 即可
 11. **Preset 有上限** — hotfix/tweak 满足升级条件时及时切换到完整流程
+
+
+
+

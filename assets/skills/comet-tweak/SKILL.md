@@ -34,6 +34,13 @@ fi
 . "$COMET_ENV"
 ```
 
+If the project has a `.harness/` directory, load harness context before starting the tweak flow:
+- Read `.harness/README.md` first to understand the project knowledge system
+- Use `.harness/README.md` to decide which context files are relevant for this tweak
+- Read `.harness/index/routing.md` and `.harness/index/priority.md` as routing and priority aids
+- Inject the relevant `.harness` files on demand before making phase decisions or editing files
+- Once the active change exists, materialize the current phase harness pack with `bash "$COMET_HARNESS" <change-name> <phase> --write`
+
 ### 1. Quick Open (preset open)
 
 Reuse Comet open capability to create change, but use tweak defaults: do not execute `openspec-explore` long exploration, directly enter streamlined change creation.
@@ -52,6 +59,12 @@ Initialize Comet state file:
 bash "$COMET_STATE" init <name> tweak
 ```
 
+If `.harness/` exists, generate the open-phase harness pack now:
+
+```bash
+bash "$COMET_HARNESS" <name> open --write
+```
+
 Verify initialized state:
 
 ```bash
@@ -67,6 +80,12 @@ bash "$COMET_GUARD" <change-name> open --apply
 ### 2. Lightweight Build (preset build)
 
 Use tweak defaults: `build_mode: direct`. Skip `superpowers:brainstorming` and `superpowers:writing-plans`.
+
+If `.harness/` exists, generate the build-phase harness pack before touching implementation:
+
+```bash
+bash "$COMET_HARNESS" <change-name> build --write
+```
 
 Before continuing or starting changes, handle uncommitted changes through `comet/reference/dirty-worktree.md`. If attribution shows scope exceeds tweak, handle it through this file's "Upgrade Conditions".
 

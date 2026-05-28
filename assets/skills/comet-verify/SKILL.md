@@ -28,6 +28,18 @@ bash "$COMET_STATE" check <change-name> verify
 
 Proceed to Step 1 after verification passes. The script outputs specific failure reasons when verification fails.
 
+### 0b. Generate Verify Harness Context
+
+If `.harness/` exists, immediately generate the current phase harness pack before running scale assessment or verification:
+
+```bash
+bash "$COMET_HARNESS" <change-name> verify --write
+```
+
+This writes:
+- `openspec/changes/<name>/.comet/handoff/verify-harness-context.md`
+- `openspec/changes/<name>/.comet/handoff/verify-harness-context.json`
+
 ### 1. Scale Assessment
 
 Execute scale assessment:
@@ -82,6 +94,7 @@ After user selection, continue as follows:
 
 When scale assessment result is "small", skip `openspec-verify-change` and directly execute these checks:
 
+0. Read `openspec/changes/<name>/.comet/handoff/verify-harness-context.md` first when it exists
 1. All tasks.md tasks completed `[x]`
 2. Changed files match tasks.md descriptions (`git diff --stat` / `git diff --cached --stat` / `git diff --stat <base-ref>...HEAD` compared against tasks content)
 3. Build passes (run project-specific build command, e.g., `npm run build`, `mvn compile`, `cargo build`, etc.)
@@ -111,7 +124,7 @@ When scale assessment result is "large":
 
 **Immediately execute:** Use the Skill tool to load the `openspec-verify-change` skill. Skipping this step is prohibited.
 
-After the skill loads, follow its guidance to verify. Check items:
+After the skill loads, read `openspec/changes/<name>/.comet/handoff/verify-harness-context.md` and follow both that context and the skill guidance to verify. Check items:
 1. All tasks.md tasks completed (`[x]`)
 2. Implementation matches `openspec/changes/<name>/design.md` high-level design decisions
 3. Implementation matches Design Doc (technical design documents under `docs/superpowers/specs/`)

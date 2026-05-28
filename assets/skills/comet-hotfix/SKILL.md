@@ -36,6 +36,7 @@ If the project has a `.harness/` directory, load harness context before starting
 - Use `.harness/README.md` to decide which context files are relevant for this hotfix
 - Read `.harness/index/routing.md` and `.harness/index/priority.md` as routing and priority aids
 - Inject the relevant `.harness` files on demand before making phase decisions or editing files
+- Once the active change exists, materialize the current phase harness pack with `bash "$COMET_HARNESS" <change-name> <phase> --write`
 
 ### 1. Quick Open (preset open)
 
@@ -55,6 +56,12 @@ Initialize Comet state file:
 bash "$COMET_STATE" init <name> hotfix
 ```
 
+If `.harness/` exists, generate the open-phase harness pack now:
+
+```bash
+bash "$COMET_HARNESS" <name> open --write
+```
+
 Verify initialized state:
 
 ```bash
@@ -70,6 +77,12 @@ bash "$COMET_GUARD" <change-name> open --apply
 ### 2. Direct Build (preset build)
 
 Use hotfix defaults: `build_mode: direct`. Skip `superpowers:brainstorming` and `superpowers:writing-plans` (unless tasks > 3; if exceeds 3 tasks, transfer to `/comet-build`'s plan and execution method selection).
+
+If `.harness/` exists, generate the build-phase harness pack before touching implementation:
+
+```bash
+bash "$COMET_HARNESS" <change-name> build --write
+```
 
 Before continuing or starting changes, handle uncommitted changes through `comet/reference/dirty-worktree.md`. If attribution shows the fix scope exceeds hotfix, handle it through this file's "Upgrade Conditions".
 
@@ -111,6 +124,12 @@ State automatically updates to `phase: verify`, `verify_result: pending`, then e
 ### 4. Verification (preset verify)
 
 Reuse `/comet-verify`, with comet-verify's scale assessment deciding lightweight or full verification.
+
+If `.harness/` exists, generate the verify-phase harness pack before verification:
+
+```bash
+bash "$COMET_HARNESS" <change-name> verify --write
+```
 
 **Immediately execute:** Use the Skill tool to load the `comet-verify` skill. Skipping this step is prohibited.
 

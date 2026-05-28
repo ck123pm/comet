@@ -209,6 +209,9 @@ verify_mode: $verify_mode
 base_ref: $base_ref
 design_doc: null
 plan: null
+harness_context: null
+harness_hash: null
+harness_phase: null
 verify_result: pending
 verification_report: null
 branch_status: pending
@@ -263,7 +266,7 @@ cmd_set() {
       yellow "WARNING: Setting 'phase' directly bypasses state machine constraints." >&2
       yellow "  Consider using: comet-state.sh transition <change-name> <event>" >&2
       ;;
-    workflow|build_mode|isolation|verify_mode|verify_result|verification_report|branch_status|archived|design_doc|plan|verified_at|created_at|direct_override|build_command|verify_command|handoff_context|handoff_hash|base_ref)
+    workflow|build_mode|isolation|verify_mode|verify_result|verification_report|branch_status|archived|design_doc|plan|verified_at|created_at|direct_override|build_command|verify_command|handoff_context|handoff_hash|harness_context|harness_hash|harness_phase|base_ref)
       # Valid field
       ;;
     *)
@@ -272,7 +275,8 @@ cmd_set() {
       red "  workflow, phase, design_doc, plan, build_mode, isolation," >&2
       red "  verify_mode, verify_result, verification_report, branch_status," >&2
       red "  verified_at, created_at, archived, base_ref, direct_override," >&2
-      red "  build_command, verify_command, handoff_context, handoff_hash" >&2
+      red "  build_command, verify_command, handoff_context, handoff_hash," >&2
+      red "  harness_context, harness_hash, harness_phase" >&2
       exit 1
       ;;
   esac
@@ -306,7 +310,10 @@ cmd_set() {
     direct_override)
       validate_enum "$value" "true" "false"
       ;;
-    design_doc|plan|verification_report|verified_at|created_at|build_command|verify_command|handoff_context|handoff_hash)
+    harness_phase)
+      validate_enum "$value" "open" "design" "build" "verify" "archive"
+      ;;
+    design_doc|plan|verification_report|verified_at|created_at|build_command|verify_command|handoff_context|handoff_hash|harness_context|harness_hash)
       # No validation for path fields, date fields, or project command strings
       ;;
   esac

@@ -20,6 +20,16 @@ If the project has a `.harness/` directory, load harness context before explorin
 
 This applies even when `/comet` routed here because there was no active change. Do not skip the `.harness` check on the new-change path.
 
+If a new change is created in this phase, immediately materialize the phase-scoped harness pack for the active change:
+
+```bash
+bash "$COMET_HARNESS" <name> open --write
+```
+
+The resulting files are:
+- `openspec/changes/<name>/.comet/handoff/open-harness-context.md`
+- `openspec/changes/<name>/.comet/handoff/open-harness-context.json`
+
 ## Steps
 
 ### 1. Explore Ideas
@@ -59,6 +69,12 @@ if [ -z "$COMET_STATE" ] || [ -z "$COMET_GUARD" ]; then
 fi
 
 bash "$COMET_STATE" init <name> full
+```
+
+If `.harness/` exists, generate the active change's open-phase harness pack now:
+
+```bash
+bash "$COMET_HARNESS" <name> open --write
 ```
 
 ### 3. Entry State Verification

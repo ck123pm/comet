@@ -2,6 +2,18 @@
 
 All notable changes to @ck123pm/comet will be documented in this file.
 
+## What's Changed [0.3.5-beta.0] - 2026-05-28
+
+### Changed
+
+- **Phase-scoped harness packs**: Added a unified `comet-harness.sh` flow so Comet can materialize per-phase `.harness` context packs for open, design, build, and verify instead of relying on one-time entry-point reads.
+- **Phase guard enforcement**: Updated Comet state validation and guard scripts to record and validate harness context metadata, preventing later phases from silently running after `.harness` changed or was never loaded for the current phase.
+- **Skill workflow parity**: Synced English and Chinese Comet skills so `comet`, `comet-open`, `comet-design`, `comet-build`, `comet-verify`, `comet-hotfix`, and `comet-tweak` all describe the same phase-scoped harness loading behavior.
+
+### Tests
+
+- **Harness phase coverage**: Extended skill and shell-script regression coverage for phase-scoped harness context generation, guard blocking, and bilingual skill parity.
+
 ## What's Changed [0.3.4] - 2026-05-28
 
 ### Changed

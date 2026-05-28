@@ -26,6 +26,16 @@ fi
 bash "$COMET_STATE" check <name> build
 ```
 
+如果存在 `.harness/`，立刻生成当前阶段的 harness pack，再做计划或实现：
+
+```bash
+bash "$COMET_HARNESS" <name> build --write
+```
+
+这会写出：
+- `openspec/changes/<name>/.comet/handoff/build-harness-context.md`
+- `openspec/changes/<name>/.comet/handoff/build-harness-context.json`
+
 验证通过后继续 Step 1。验证失败时脚本会输出具体失败原因。
 
 ### 1. 制定计划
@@ -33,6 +43,7 @@ bash "$COMET_STATE" check <name> build
 **立即执行：** 使用 Skill 工具加载 `superpowers:writing-plans` 技能。禁止跳过此步骤。
 
 技能加载后，按其指引制定计划。计划要求：
+- 如果 `openspec/changes/<name>/.comet/handoff/build-harness-context.md` 存在，先读取它，再把适用的 harness 约束带入 plan
 - 保存至 `docs/superpowers/plans/YYYY-MM-DD-<feature>.md`
 - 引用设计文档，拆分为可执行任务
 - **Plan 文件头必须包含关联元数据**：
@@ -81,7 +92,7 @@ bash "$COMET_STATE" set <name> plan docs/superpowers/plans/YYYY-MM-DD-feature.md
 | 选项 | 技能 | 适用场景 |
 |------|------|---------|
 | A | `superpowers:subagent-driven-development` | 任务独立、复杂度高、需要双阶段审查 |
-| B | `superpowers:executing-plans` | 任务简单、无子agent环境、轻量快速 |
+| B | `superpowers:executing-plans` | 任务简单、无子 agent 环境、轻量快速 |
 
 **执行方式推荐规则**：
 - 任务数 ≥ 3 → 推荐 A
@@ -111,78 +122,46 @@ bash "$COMET_STATE" set <name> build_mode direct
 **执行隔离**：
 
 - **branch**：执行 `git checkout -b <change-name>`，后续工作在新分支上进行
-- **worktree**：必须使用 Skill 工具加载 `superpowers:using-git-worktrees` 技能创建隔离工作区。禁止用普通 shell 命令或原生工具绕过该技能；如该技能不可用，停止流程并提示安装或启用 Superpowers 技能。
+- **worktree**：**必须使用 Skill 工具加载 `superpowers:using-git-worktrees`**。禁止用普通 shell 命令或原生工具绕过该技能；如该技能不可用，停止流程并提示安装或启用对应技能
 
-创建隔离后，确认计划文件可访问（分支方式天然可访问；worktree 方式需确认计划已提交）。
+创建隔离后，确认计划文件可访问。
 
 **加载执行技能**：使用 Skill 工具加载对应技能。禁止跳过此步骤。
 
+执行计划前，先加载 `openspec/changes/<name>/.comet/handoff/build-harness-context.md`，并在实现过程中执行其中的约束。
+
 如所选 Superpowers 技能不可用，停止流程并提示安装或启用对应技能，不要用普通对话替代该步骤。
 
-技能加载后，按其指引执行：
-- 按计划执行任务
+### 4. 执行计划
+
+执行时遵循以下要求：
+- 按计划逐项完成任务
 - 完成 tasks.md 勾选（`- [ ]` → `- [x]`）
 - 每个任务完成后提交代码
 
-### 4. Spec 增量更新
+### 5. Spec 增量更新
 
 实施过程中发现初版 spec 不完整时，按变更规模分级处理：
 
 | 规模 | 触发条件 | 做法 |
 |------|---------|------|
 | 小 | 遗漏验收场景、边界条件 | 直接编辑 delta spec + design.md，追加 tasks.md 任务 |
-| 中 | 接口变更、新增组件、数据流变化 | 暂停并等待用户确认后，必须使用 Skill 工具加载 `superpowers:brainstorming` 更新 Design Doc + delta spec |
+| 中 | 接口变更、新增组件、数据流变化 | **暂停并等待用户确认后，必须使用 Skill 工具加载 `superpowers:brainstorming`** 更新 Design Doc + delta spec |
 | 大 | 全新 capability 需求 | 必须暂停并等待用户确认拆分；用户确认后，通过 `/comet-open` 创建独立 change |
 
-**50% 阈值判定**：以 tasks.md 初始任务总数为基准，若新增任务数超过该总数的一半，视为超出原计划范围，必须暂停并等待用户决定是否拆分为新 change。
+**50% 阈值判定**：以 tasks.md 初始任务总数为基准，若新增任务数超过该总数的一半，视为超出原计划范围，**必须暂停并等待用户决定是否拆分为新 change**。
 
-创建独立 change 时必须调用 `/comet-open`，不得直接调用 `/opsx:new`。`/comet-open` 会同时创建 OpenSpec 产物和 `.comet.yaml`，避免新 change 脱离 Comet 状态机。
-
-**原则**：
-- delta spec 是活文档，本阶段期间随时可修改
-- 每次更新应提交，commit message 说明变更原因
-- 不提前同步到 main spec，归档时统一同步
-- 小规模增量直接改 delta spec 时，应在 commit message 中注明，便于归档时判断 design doc 漂移
-
-### 5. 上下文管理
-
-Build 是最长阶段，可能跨越大量任务。为支持上下文压缩后断点恢复：
-
-- **每完成一个 task**：立即勾选 tasks.md 并提交代码，确保 `.comet.yaml` 和文件状态持久化
-- **上下文压缩后恢复**：读取 `.comet.yaml` 的 `phase` 字段确认仍在 build 阶段，读取 plan 文件头的 `base-ref`，再读取 tasks.md 找到下一个未勾选任务继续执行
-- **用户手动修改恢复**：按 `comet/reference/dirty-worktree.md` 协议处理未提交改动。该协议定义了检查步骤、归因分类和禁令。build 阶段的特殊处理：
-  1. 归因后，若 diff 暗示计划或 spec 已变化，按 Step 4「Spec 增量更新」分级处理
-- **长任务拆分**：单任务超过 200 行代码变更时，考虑拆分为多个子任务分别提交
+创建独立 change 时必须通过 `/comet-open` 创建独立 change，不得直接调用 `/opsx:new`。`/comet-open` 会同时创建 OpenSpec 产物和 `.comet.yaml`，避免新 change 脱离 Comet 状态机。
 
 ## 退出条件
 
 - tasks.md 全部勾选
 - 代码已提交
-- 已显式运行项目对应的构建/测试命令并通过（不要只依赖 guard 自动猜测）
-- `isolation` 已写为 `branch` 或 `worktree`
-- `build_mode` 已写为 `subagent-driven-development`、`executing-plans` 或带显式 override 的 `direct`
+- 已显式运行项目对应的构建/测试命令并通过
+- `isolation` 已写入 `branch` 或 `worktree`
+- `build_mode` 已写入 `subagent-driven-development`、`executing-plans` 或带显式 override 的 `direct`
 - **阶段守卫**：运行 `bash "$COMET_GUARD" <change-name> build --apply`，全部 PASS 后自动流转到 `phase: verify`
-
-Guard 会优先读取项目配置中的命令：
-
-```yaml
-build_command: <build command>
-verify_command: <verify command>
-```
-
-配置位置可为 change 的 `.comet.yaml`，也可为仓库根目录的 `.comet.yaml` / `comet.yaml` / `.comet.yml` / `comet.yml`。
-未配置时才回退到 `npm run build`、Maven 或 Cargo 的默认探测。构建失败时 guard 会打印失败命令输出，作为排查证据。
-
-退出前运行 guard 自动流转：
 
 ```bash
 bash "$COMET_GUARD" <change-name> build --apply
 ```
-
-状态文件自动更新为 `phase: verify`、`verify_result: pending`。
-
-## 自动流转
-
-退出条件满足后，**无需等待用户再次输入**，直接执行下一阶段：
-
-> **REQUIRED NEXT SKILL:** 调用 `comet-verify` skill 进入验证与收尾阶段。

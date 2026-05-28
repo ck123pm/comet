@@ -225,6 +225,81 @@ compute_handoff_hash() {
   done | hash_stream
 }
 
+discover_harness_files() {
+  local scratch="$1"
+  local seen="$2"
+  : > "$scratch"
+  : > "$seen"
+
+  if [ ! -d ".harness" ]; then
+    return 0
+  fi
+
+  for file in \
+    ".harness/README.md" \
+    ".harness/index/routing.md" \
+    ".harness/index/priority.md"; do
+    if [ -f "$file" ] && ! grep -Fxq "$file" "$seen"; then
+      printf '%s\n' "$file" >> "$scratch"
+      printf '%s\n' "$file" >> "$seen"
+    fi
+  done
+
+  local references_file
+  references_file=$(mktemp)
+  cat \
+    ".harness/README.md" \
+    ".harness/index/routing.md" \
+    ".harness/index/priority.md" 2>/dev/null |
+    grep -Eo '(\.harness/)?[A-Za-z0-9._/-]+\.(md|txt|yaml|yml|json)' |
+    sed 's#^\./##' |
+    awk '
+      {
+        candidate = $0
+        if (candidate !~ /^\.harness\//) {
+          candidate = ".harness/" candidate
+        }
+        print candidate
+      }
+    ' | sort -u > "$references_file" || true
+
+  while IFS= read -r candidate; do
+    [ -n "$candidate" ] || continue
+    [ -f "$candidate" ] || continue
+    if ! grep -Fxq "$candidate" "$seen"; then
+      printf '%s\n' "$candidate" >> "$scratch"
+      printf '%s\n' "$candidate" >> "$seen"
+    fi
+  done < "$references_file"
+  rm -f "$references_file"
+
+  find ".harness" -type f \( -name "*.md" -o -name "*.txt" -o -name "*.yaml" -o -name "*.yml" -o -name "*.json" \) 2>/dev/null |
+    sort | while IFS= read -r file; do
+      if ! grep -Fxq "$file" "$seen"; then
+        printf '%s\n' "$file" >> "$scratch"
+        printf '%s\n' "$file" >> "$seen"
+      fi
+    done
+}
+
+compute_harness_hash() {
+  local phase="$1"
+  local files_list
+  local seen_list
+  files_list=$(mktemp)
+  seen_list=$(mktemp)
+  discover_harness_files "$files_list" "$seen_list"
+  {
+    printf 'phase:%s\n' "$phase"
+    while IFS= read -r file; do
+      [ -f "$file" ] || continue
+      printf 'path:%s\n' "$file"
+      printf 'sha256:%s\n' "$(hash_file "$file")"
+    done < "$files_list"
+  } | hash_stream
+  rm -f "$files_list" "$seen_list"
+}
+
 preflight() {
 
   if [ ! -d "$CHANGE_DIR" ]; then
@@ -472,6 +547,56 @@ design_doc_declares_canonical_spec() {
     design_doc_frontmatter_has "$design_doc" "canonical_spec" "openspec"
 }
 
+harness_context_valid_for_phase() {
+  local expected_phase="$1"
+
+  if [ ! -d ".harness" ]; then
+    return 0
+  fi
+
+  local context recorded_hash recorded_phase actual_hash markdown
+  context=$(yaml_field_value "harness_context" 2>/dev/null || true)
+  recorded_hash=$(yaml_field_value "harness_hash" 2>/dev/null || true)
+  recorded_phase=$(yaml_field_value "harness_phase" 2>/dev/null || true)
+
+  if [ -z "$context" ] || [ "$context" = "null" ]; then
+    echo "harness_context is missing from .comet.yaml" >&2
+    echo "Next: run bash \"\$COMET_HARNESS\" $CHANGE $expected_phase --write before continuing this phase." >&2
+    return 1
+  fi
+  if [ ! -s "$context" ]; then
+    echo "harness_context does not point to a non-empty file: $context" >&2
+    echo "Next: regenerate harness context with comet-harness.sh." >&2
+    return 1
+  fi
+  if [ "$recorded_phase" != "$expected_phase" ]; then
+    echo "harness_phase is '${recorded_phase:-null}', expected '$expected_phase'" >&2
+    echo "Next: regenerate harness context for the current phase with comet-harness.sh." >&2
+    return 1
+  fi
+  if [[ ! "$recorded_hash" =~ ^[a-f0-9]{64}$ ]]; then
+    echo "harness_hash is missing or invalid: ${recorded_hash:-null}" >&2
+    echo "Next: regenerate harness context with comet-harness.sh." >&2
+    return 1
+  fi
+
+  actual_hash=$(compute_harness_hash "$expected_phase")
+  if [ "$actual_hash" != "$recorded_hash" ]; then
+    echo "Harness files changed after harness context was generated." >&2
+    echo "Expected harness_hash: $recorded_hash" >&2
+    echo "Actual harness_hash:   $actual_hash" >&2
+    echo "Next: rerun comet-harness.sh so the current phase uses fresh harness context." >&2
+    return 1
+  fi
+
+  markdown="${context%.json}.md"
+  if [ ! -s "$markdown" ]; then
+    echo "harness markdown is missing or empty: $markdown" >&2
+    echo "Next: regenerate harness context with comet-harness.sh." >&2
+    return 1
+  fi
+}
+
 archived_is_true() {
   local val
   val=$(yaml_field_value "archived" 2>/dev/null || true)
@@ -487,6 +612,7 @@ guard_open() {
   check "design.md exists and non-empty" file_nonempty "$CHANGE_DIR/design.md"
   check "tasks.md exists and non-empty" file_nonempty "$CHANGE_DIR/tasks.md"
   check "tasks.md has at least one task" tasks_has_any
+  check "open harness context is current" harness_context_valid_for_phase "open"
 }
 
 guard_design() {
@@ -498,6 +624,7 @@ guard_design() {
   check "proposal.md exists" file_nonempty "$CHANGE_DIR/proposal.md"
   check "design.md exists" file_nonempty "$CHANGE_DIR/design.md"
   check "tasks.md exists" file_nonempty "$CHANGE_DIR/tasks.md"
+  check "design harness context is current" harness_context_valid_for_phase "design"
   check "design handoff context exists" design_handoff_context_valid
   check "design handoff markdown is traceable" design_handoff_markdown_traceable
 
@@ -517,6 +644,7 @@ guard_build() {
   check "isolation selected" isolation_selected
   check "build_mode selected" build_mode_selected
   check "build_mode allowed for workflow" build_mode_allowed_for_workflow
+  check "build harness context is current" harness_context_valid_for_phase "build"
   check "tasks.md all tasks checked" tasks_all_done
   check "proposal.md exists" file_nonempty "$CHANGE_DIR/proposal.md"
   check "Build passes" build_passes
@@ -525,6 +653,7 @@ guard_build() {
 guard_verify() {
   echo "=== Guard: verify → archive ===" >&2
 
+  check "verify harness context is current" harness_context_valid_for_phase "verify"
   check "tasks.md all tasks checked" tasks_all_done
   check "Build passes" verification_command_passes
   check "verification_report exists" verification_report_exists

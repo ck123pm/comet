@@ -1,4 +1,4 @@
----
+﻿---
 name: comet-design
 description: "Comet 阶段 2：深度设计。用 /comet-design 调用。通过 brainstorming 产出 Design Doc 和 delta spec。"
 ---
@@ -25,6 +25,16 @@ fi
 . "$COMET_ENV"
 bash "$COMET_STATE" check <name> design
 ```
+
+如果存在 `.harness/`，立刻生成当前阶段的 harness pack，再生成 handoff 或加载 Superpowers：
+
+```bash
+bash "$COMET_HARNESS" <change-name> design --write
+```
+
+这会写出：
+- `openspec/changes/<name>/.comet/handoff/design-harness-context.md`
+- `openspec/changes/<name>/.comet/handoff/design-harness-context.json`
 
 验证通过后继续 Step 1。验证失败时脚本会输出具体失败原因。
 
@@ -75,6 +85,7 @@ bash "$COMET_HANDOFF" <change-name> design --write --full
 Change: <change-name>
 OpenSpec Context Pack: openspec/changes/<name>/.comet/handoff/design-context.md
 Machine handoff: openspec/changes/<name>/.comet/handoff/design-context.json
+Harness Context Pack: openspec/changes/<name>/.comet/handoff/design-harness-context.md
 
 OpenSpec 产物是上游事实源，不要重新定义需求，不要重写 proposal/spec。
 你的任务是基于交接包做深度技术设计：实现方案、技术风险、测试策略、边界条件。
@@ -152,3 +163,5 @@ bash "$COMET_GUARD" <change-name> design --apply
 退出条件满足后，**无需等待用户再次输入**，直接执行下一阶段：
 
 > **REQUIRED NEXT SKILL:** 调用 `comet-build` skill 进入计划与构建阶段。
+
+

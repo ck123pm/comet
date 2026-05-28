@@ -217,6 +217,8 @@ describe('skills', () => {
       expect(zhComet).toContain('README.md');
       expect(zhComet).toContain('按需注入');
       expect(zhComet).toContain('`MUST`');
+      expect(zhComet).toContain('COMET_HARNESS');
+      expect(zhComet).toContain('phase-scoped harness context pack');
       expect(zhHotfix).toContain('.harness');
       expect(zhHotfix).toContain('README.md');
       expect(zhHotfix).toContain('按需注入');
@@ -226,6 +228,13 @@ describe('skills', () => {
       expect(zhOpen).toContain('README.md');
       expect(zhOpen).toContain('按需注入');
       expect(zhOpen).toContain('不能跳过 `.harness` 检查');
+      expect(zhOpen).toContain('open-harness-context.md');
+      expect(zhDesign).toContain('design-harness-context.md');
+      expect(zhDesign).toContain('Harness Context Pack');
+      expect(zhBuild).toContain('build-harness-context.md');
+      expect(zhVerify).toContain('verify-harness-context.md');
+      expect(zhHotfix).toContain('bash "$COMET_HARNESS" <change-name> build --write');
+      expect(zhTweak).toContain('bash "$COMET_HARNESS" <change-name> verify --write');
 
       expect(zhComet).toContain('决策点是阻塞点');
       expect(zhDesign).toContain('必须暂停并等待用户明确确认设计方案');

@@ -1,4 +1,4 @@
----
+﻿---
 name: comet-open
 description: "Comet 阶段 1：开启。用 /comet-open 调用。通过 OpenSpec 探索想法、创建 change 结构（proposal + design + tasks）。"
 ---
@@ -19,6 +19,16 @@ description: "Comet 阶段 1：开启。用 /comet-open 调用。通过 OpenSpec
 - 核心规则是 **按需注入** 相关 `.harness` 文件，不是只读 `MUST` 文件
 
 即使是 `/comet` 在“没有活跃 change”时路由到这里，也不能跳过 `.harness` 检查和上下文判定。
+
+如果这个阶段创建了新的 change，必须立刻生成 open 阶段的 phase-scoped harness pack：
+
+```bash
+bash "$COMET_HARNESS" <name> open --write
+```
+
+生成的文件：
+- `openspec/changes/<name>/.comet/handoff/open-harness-context.md`
+- `openspec/changes/<name>/.comet/handoff/open-harness-context.json`
 
 ## 步骤
 
@@ -61,6 +71,12 @@ fi
 bash "$COMET_STATE" init <name> full
 ```
 
+如果存在 `.harness/`，立刻生成 active change 的 open 阶段 harness pack：
+
+```bash
+bash "$COMET_HARNESS" <name> open --write
+```
+
 ### 3. 入口状态验证
 
 验证状态机已被正确初始化：
@@ -99,3 +115,5 @@ bash "$COMET_GUARD" <change-name> open --apply
 > **REQUIRED NEXT SKILL（完整流程）：** 调用 `comet-design` skill，进入深度设计阶段。
 >
 > hotfix/tweak preset 的后续流转由对应 preset skill 控制（phase 直接进入 build），不经过本节。
+
+
