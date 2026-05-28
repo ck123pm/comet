@@ -915,6 +915,58 @@ describe('comet shell scripts', () => {
     expect(result.stderr).toContain('Archive complete. 7/7 steps succeeded.');
   }, 20_000);
 
+  it('emits a non-blocking .harness review reminder during archive', async () => {
+    const archiveScript = path.join(tmpDir, 'scripts', 'comet-archive.sh');
+    await createChange(
+      tmpDir,
+      'harness-review',
+      [
+        'workflow: full',
+        'phase: archive',
+        'build_mode: executing-plans',
+        'isolation: branch',
+        'verify_mode: full',
+        'design_doc: docs/superpowers/specs/harness-review-design.md',
+        'plan: docs/superpowers/plans/harness-review-plan.md',
+        'verify_result: pass',
+        'verification_report: docs/superpowers/reports/harness-review.md',
+        'branch_status: handled',
+        'verified_at: 2026-05-21',
+        'archived: false',
+        '',
+      ].join('\n'),
+    );
+    await writeFile(
+      path.join(tmpDir, 'docs', 'superpowers', 'specs', 'harness-review-design.md'),
+      'design\n',
+    );
+    await writeFile(
+      path.join(tmpDir, 'docs', 'superpowers', 'plans', 'harness-review-plan.md'),
+      'plan\n',
+    );
+    await writeFile(
+      path.join(tmpDir, 'docs', 'superpowers', 'reports', 'harness-review.md'),
+      'PASS\n',
+    );
+    await writeFile(
+      path.join(tmpDir, 'openspec', 'changes', 'harness-review', 'specs', 'capability', 'spec.md'),
+      'delta spec\n',
+    );
+    await writeFile(path.join(tmpDir, '.harness', 'README.md'), '# Harness\n');
+    await writeFile(path.join(tmpDir, '.harness', 'index', 'routing.md'), 'routing\n');
+    await writeFile(path.join(tmpDir, '.harness', 'index', 'priority.md'), 'MUST\n');
+
+    const result = runBash(tmpDir, archiveScript, ['harness-review']);
+
+    expect(result.status).toBe(0);
+    expect(result.stderr).toContain('[INFO] .harness detected');
+    expect(result.stderr).toContain(
+      'Next: trigger a harness update/spec review and decide whether relevant .harness content should be updated for this archive.',
+    );
+    expect(result.stderr).toContain('[OK] .harness review reminder emitted');
+    expect(result.stderr).toContain('Archive complete. 8/8 steps succeeded.');
+  }, 20_000);
+
   it('uses plan base-ref to scale verification after changes have been committed', async () => {
     execFileSync('git', ['init'], { cwd: tmpDir, stdio: 'ignore' });
     execFileSync('git', ['config', 'user.email', 'test@example.com'], { cwd: tmpDir });
@@ -960,7 +1012,7 @@ describe('comet shell scripts', () => {
 
     expect(result.status).toBe(0);
     expect(mode.stdout.trim()).toBe('full');
-  });
+  }, 20_000);
 
   it('transitions full workflow from open to design', async () => {
     await createChange(

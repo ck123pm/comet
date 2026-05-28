@@ -50,8 +50,14 @@ agent 做决策只需读本节，参考附录按需查阅。
 
 优先读取 `openspec/changes/<name>/.comet.yaml`。不存在时回退到 `openspec status --change "<name>" --json`、`tasks.md` 和 `docs/superpowers/` 文件检查。
 
+如果项目存在 `.harness/` 目录，在阶段路由前先加载 `.harness` 上下文：
+- 先读 `.harness/README.md`，理解项目知识体系、目录用途和推荐阅读路径
+- 再结合 `.harness/index/routing.md` 和 `.harness/index/priority.md`，判断当前 change / 阶段需要哪些上下文
+- 核心规则是**按需注入**相关 `.harness` 文件，不是只注入 `MUST` 文件
+
 **断点恢复规则**：
 - 每次恢复上下文时，先重新执行 Step 0 和 Step 1，不依赖对话历史判断阶段
+- 每次进入 Comet 阶段前，只要存在 `.harness/`，都要先重新执行上面的 `.harness` 上下文判定流程
 - 只要存在 active change 且工作区有未提交改动，必须按 `comet/reference/dirty-worktree.md` 协议处理。该协议定义了检查步骤、归因分类和禁令，本文件不重复
 - 若 `phase: build`，先检查 `build_mode` 和 `isolation` 是否已设置；若有未设置的字段，回到 `/comet-build` 对应步骤补充后再执行；若均已设置，读取 tasks.md 的下一个未勾选任务继续
 - 若 `phase: verify` 且 `verify_result: fail`，进入验证失败决策阻塞点：暂停并询问用户修复或接受偏差；用户选择修复后才运行 `bash "$COMET_STATE" transition <name> verify-fail` 并调用 `/comet-build`

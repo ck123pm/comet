@@ -31,6 +31,12 @@ fi
 . "$COMET_ENV"
 ```
 
+If the project has a `.harness/` directory, load harness context before starting the hotfix flow:
+- Read `.harness/README.md` first to understand the project knowledge system
+- Use `.harness/README.md` to decide which context files are relevant for this hotfix
+- Read `.harness/index/routing.md` and `.harness/index/priority.md` as routing and priority aids
+- Inject the relevant `.harness` files on demand before making phase decisions or editing files
+
 ### 1. Quick Open (preset open)
 
 Reuse Comet open capability to create change, but use hotfix defaults: do not execute `openspec-explore` long exploration, directly enter streamlined change creation.

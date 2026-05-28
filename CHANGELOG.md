@@ -4,9 +4,19 @@ All notable changes to @rpamis/comet will be documented in this file.
 
 ## What's Changed [0.3.3] - 2026-05-27
 
+### Changed
+
+- **Harness context loading**: Updated Comet and Hotfix skill guidance so projects with `.harness/` load context from `.harness/README.md` first, then use `index/routing.md` and `index/priority.md` as aids to inject relevant context on demand instead of limiting reads to `MUST` files.
+- **Archive harness reminder**: Adjusted archive guidance so `.harness/` presence triggers a harness update/spec review reminder without blocking archive completion or enforcing file-age checks, leaving the final update decision to the agent based on the current change artifacts.
+- **Chinese skill parity**: Synced the Chinese `comet`, `comet-hotfix`, and `comet-archive` skill documents to place `.harness` instructions in the same workflow sections as the English versions for easier fork maintenance after upstream merges.
+
 ### Fixed
 
 - **OpenSpec all-workflows installation**: `comet init` now writes the all-workflows config directly to the platform-specific default config path (`%APPDATA%\openspec\` on Windows, `$XDG_CONFIG_HOME/openspec/` on macOS/Linux when set, otherwise `~/.config/openspec/`) in addition to the isolated `XDG_CONFIG_HOME` env override, ensuring all 11 OpenSpec workflows are always installed regardless of the user's previous OpenSpec config state.
+
+### Tests
+
+- **Harness workflow coverage**: Added and updated regression coverage for `.harness` on-demand context guidance in English and Chinese skills plus the non-blocking archive reminder path.
 
 ## What's Changed [0.3.2] - 2026-05-27
 

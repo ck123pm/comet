@@ -42,8 +42,9 @@ The script automatically executes:
 2. Delta spec sync to main spec (overwrite)
 3. Design doc frontmatter annotation (archived-with, status)
 4. Plan frontmatter annotation (archived-with)
-5. Move change to archive directory
-6. Update `archived: true` through `comet-state transition <archive-name> archived`
+5. If `.harness/` exists, trigger a harness update/spec review reminder so the agent checks whether `.harness` content should be updated
+6. Move change to archive directory
+7. Update `archived: true` through `comet-state transition <archive-name> archived`
 
 If script returns non-zero exit code, report error and stop.
 If script returns zero exit code, archive is complete.
@@ -65,6 +66,7 @@ brainstorming → delta spec → implementation → verification → main spec o
 - Archive script executed successfully (exit code 0)
 - Archive directory `openspec/changes/archive/YYYY-MM-DD-<change-name>/` exists
 - Archived `.comet.yaml` contains `archived: true`
+- If `.harness/` exists, the archive flow has reminded the agent to review whether relevant `.harness` content should be updated
 
 The archive script moves `openspec/changes/<name>/` to `openspec/changes/archive/YYYY-MM-DD-<name>/`. After successful archive, **do not run** `bash "$COMET_GUARD" <change-name> archive` against the old active change name; the active directory no longer exists. Archive completeness is determined by script exit code and archived directory state.
 

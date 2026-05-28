@@ -42,8 +42,9 @@ bash "$COMET_ARCHIVE" "<change-name>"
 2. Delta spec 同步到主 spec
 3. Design doc 前置元数据标注（archived-with, status）
 4. Plan 前置元数据标注（archived-with）
-5. 移动 change 到归档目录
-6. 通过 `comet-state transition <archive-name> archived` 更新 `archived: true`
+5. 如存在 `.harness/`，触发 harness update/spec review 提示，由 AI 根据 `.harness/README.md` 和当前 change 产物按需判断是否需要更新 `.harness` 内容
+6. 移动 change 到归档目录
+7. 通过 `comet-state transition <archive-name> archived` 更新 `archived: true`
 
 如脚本返回非零退出码，报告错误并停止。
 如脚本返回零退出码，归档完成。

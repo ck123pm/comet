@@ -31,6 +31,11 @@ fi
 . "$COMET_ENV"
 ```
 
+如果项目存在 `.harness/` 目录，在开始 hotfix 流程前先加载 `.harness` 上下文：
+- 先读 `.harness/README.md`
+- 再结合 `.harness/index/routing.md` 和 `.harness/index/priority.md`，判断当前 hotfix 需要哪些上下文
+- 核心规则是**按需注入**相关 `.harness` 文件，不是只读 `MUST` 文件
+
 ### 1. 快速开启（preset open）
 
 复用 Comet open 能力创建 change，但使用 hotfix 默认值：不执行 `openspec-explore` 长探索，直接进入精简 change 创建。

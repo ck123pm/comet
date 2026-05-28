@@ -50,8 +50,15 @@ Calling `/opsx:new` directly leaves `.comet.yaml` missing and breaks later phase
 
 Prefer reading `openspec/changes/<name>/.comet.yaml`. If not available, fall back to `openspec status --change "<name>" --json`, `tasks.md`, and `docs/superpowers/` file checks.
 
+If the project has a `.harness/` directory, load harness context before phase routing:
+- Read `.harness/README.md` first to understand the project knowledge system
+- Use `.harness/README.md` to decide which project context files are relevant for the current change and phase
+- Read `.harness/index/routing.md` and `.harness/index/priority.md` as routing and priority aids
+- Inject the relevant `.harness` files on demand; do not narrow the context to only files marked `MUST`
+
 **Resume rules**:
 - On every context resume, rerun Step 0 and Step 1; do not trust conversation history for phase detection
+- On every phase entry, if `.harness/` exists, rerun the harness loading sequence above before making phase decisions or editing files
 - If there is an active change and the worktree has uncommitted changes, handle them through `comet/reference/dirty-worktree.md`. That protocol defines checks, attribution, and prohibitions; this file does not repeat them
 - If `phase: build`, first check whether `build_mode` and `isolation` are set; if any fields are unset, return to `/comet-build` corresponding step to supplement before executing; if both are set, read the next unchecked task from tasks.md and continue
 - If `phase: verify` and `verify_result: fail`, enter the verification failure decision blocking point: pause and ask the user to fix or accept deviation; only after the user chooses fix, run `bash "$COMET_STATE" transition <name> verify-fail` and invoke `/comet-build`
@@ -281,3 +288,4 @@ docs/superpowers/                      # Superpowers — HOW
 9. **Archive closure** — design doc and plan must mark `archived-with` status
 10. **Modifying existing features** — Just open a new change
 11. **Preset has limits** — Switch to full workflow promptly when hotfix/tweak meet upgrade conditions
+12. **Harness context is mandatory when present** — consult `.harness/README.md`, then use `index/routing.md` and `index/priority.md` to decide what context to inject for the current phase and change

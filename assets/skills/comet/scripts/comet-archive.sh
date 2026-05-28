@@ -192,7 +192,19 @@ sync_delta_specs() {
   done
 }
 
+remind_harness_review() {
+  if [ ! -d ".harness" ]; then
+    return 0
+  fi
+
+  yellow "  [INFO] .harness detected" >&2
+  yellow "  Next: trigger a harness update/spec review and decide whether relevant .harness content should be updated for this archive." >&2
+  step_ok ".harness review reminder emitted"
+}
+
 sync_delta_specs
+
+remind_harness_review
 
 # --- Step 5: Annotate design doc frontmatter ---
 

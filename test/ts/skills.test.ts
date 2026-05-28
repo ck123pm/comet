@@ -205,6 +205,19 @@ describe('skills', () => {
         path.resolve('assets', 'skills-zh', 'comet-tweak', 'SKILL.md'),
         'utf-8',
       );
+      const zhArchive = await fs.readFile(
+        path.resolve('assets', 'skills-zh', 'comet-archive', 'SKILL.md'),
+        'utf-8',
+      );
+      expect(zhComet).toContain('.harness');
+      expect(zhComet).toContain('README.md');
+      expect(zhComet).toContain('按需注入');
+      expect(zhComet).toContain('`MUST`');
+      expect(zhHotfix).toContain('.harness');
+      expect(zhHotfix).toContain('README.md');
+      expect(zhHotfix).toContain('按需注入');
+      expect(zhArchive).toContain('.harness');
+      expect(zhArchive).toContain('update/spec review');
 
       expect(zhComet).toContain('决策点是阻塞点');
       expect(zhDesign).toContain('必须暂停并等待用户明确确认设计方案');
@@ -307,8 +320,19 @@ describe('skills', () => {
         path.resolve('assets', 'skills', 'comet-tweak', 'SKILL.md'),
         'utf-8',
       );
+      const enArchive = await fs.readFile(
+        path.resolve('assets', 'skills', 'comet-archive', 'SKILL.md'),
+        'utf-8',
+      );
 
       expect(enComet).toContain('Decision points are blocking points');
+      expect(enComet).toContain('If the project has a `.harness/` directory, load harness context before phase routing');
+      expect(enComet).toContain('Read `.harness/README.md` first');
+      expect(enComet).toContain('Use `.harness/README.md` to decide which project context files are relevant');
+      expect(enComet).toContain('Read `.harness/index/routing.md` and `.harness/index/priority.md` as routing and priority aids');
+      expect(enComet).toContain('Inject the relevant `.harness` files on demand');
+      expect(enComet).not.toContain('inject every `MUST` file before continuing');
+      expect(enComet).not.toContain('`.harness/memory/pitfalls.md` and `.harness/memory/regressions.md`');
       expect(enDesign).toContain('must pause and wait for the user to explicitly confirm');
       expect(enBuild).toContain('must not choose `branch` or `worktree` based on recommendation rules');
       expect(enBuild).toContain('must not choose the execution method based on recommendation rules');
@@ -344,9 +368,13 @@ describe('skills', () => {
       expect(enBuild).toContain('Must use the Skill tool to load `superpowers:using-git-worktrees`');
       expect(enBuild).not.toContain('native `EnterWorktree` tool');
       expect(enBuild).toContain('must use Skill tool to load `superpowers:brainstorming`');
+      expect(enHotfix).toContain('If the project has a `.harness/` directory, load harness context before starting the hotfix flow');
+      expect(enHotfix).toContain('Inject the relevant `.harness` files on demand');
       expect(enHotfix).toContain('Immediately use the Skill tool to load the `comet-design` skill');
       expect(enTweak).toContain('Immediately use the Skill tool to load the `comet-design` skill');
       expect(enVerify).toContain('After user selects B, run `bash "$COMET_STATE" transition <change-name> verify-fail`, then invoke `/comet-build`');
+      expect(enArchive).toContain('If `.harness/` exists, trigger a harness update/spec review reminder');
+      expect(enArchive).toContain('whether `.harness` content should be updated');
     });
   });
 
